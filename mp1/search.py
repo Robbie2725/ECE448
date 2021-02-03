@@ -18,6 +18,7 @@ files and classes when code is run, so be careful to not modify anything else.
 # maze is a Maze object based on the maze from the file specified by input filename
 # searchMethod is the search method specified by --method flag (bfs,dfs,astar,astar_multi,fast)
 
+from help import *
 
 def bfs(maze):
     """
@@ -27,7 +28,37 @@ def bfs(maze):
 
     @return path: a list of tuples containing the coordinates of each state in the computed path
     """
-    return []
+    # vairables for search
+    columns, rows = get_size(maze)
+    cur_cell = maze.start
+    print(cur_cell)
+    bfs_frontier = []  # list of (ID, parent, cost)
+    bfs_explored = {cur_cell: (None, 0)}  # maps ID -> (parent, cost)
+    for cell in maze.neighbors(cur_cell[0], cur_cell[1]):
+        bfs_frontier.append((cell, cur_cell, 1))
+    frontier_cell = (cur_cell, None, 0)
+    while frontier_cell[0] != maze.legend.waypoint:
+        # print(bfs_frontier)
+        # check if cost lower than current cost in explored
+        if frontier_cell[0] in bfs_explored.keys():
+            if frontier_cell[2] < bfs_explored[frontier_cell[0]][1]:
+                bfs_frontier[frontier_cell[0]] = (frontier_cell[1], frontier_cell[2])
+            else:
+                continue
+        # add neighbors to frontier
+        neighbors = maze.neighbors(frontier_cell[0])
+        # print(neighbors)
+        for cell in neighbors:
+            bfs_frontier.append((cell, frontier_cell[0], frontier_cell[2]+1))
+        frontier_cell = bfs_frontier.pop(0)
+
+    path = [frontier_cell[1]]
+    cur_parent = frontier_cell[1]
+    while cur_parent != maze.start:
+        path.index(0, cur_parent)
+    path.index(0, cur_parent)
+
+    return path
 
 def astar_single(maze):
     """
