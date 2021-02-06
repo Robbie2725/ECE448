@@ -18,7 +18,7 @@ files and classes when code is run, so be careful to not modify anything else.
 # maze is a Maze object based on the maze from the file specified by input filename
 # searchMethod is the search method specified by --method flag (bfs,dfs,astar,astar_multi,fast)
 
-from help import *
+from time import sleep
 
 def bfs(maze):
     """
@@ -29,34 +29,40 @@ def bfs(maze):
     @return path: a list of tuples containing the coordinates of each state in the computed path
     """
     # vairables for search
-    columns, rows = get_size(maze)
     cur_cell = maze.start
-    print(cur_cell)
-    bfs_frontier = []  # list of (ID, parent, cost)
+    bfs_frontier = []  # list of (ID, parent, cost), managed with queue methods
     bfs_explored = {cur_cell: (None, 0)}  # maps ID -> (parent, cost)
     for cell in maze.neighbors(cur_cell[0], cur_cell[1]):
         bfs_frontier.append((cell, cur_cell, 1))
-    frontier_cell = (cur_cell, None, 0)
-    while frontier_cell[0] != maze.legend.waypoint:
-        # print(bfs_frontier)
+    frontier_cell = bfs_frontier.pop(0)
+    cur_cell = frontier_cell[0]
+    while cur_cell not in maze.waypoints:
         # check if cost lower than current cost in explored
-        if frontier_cell[0] in bfs_explored.keys():
-            if frontier_cell[2] < bfs_explored[frontier_cell[0]][1]:
-                bfs_frontier[frontier_cell[0]] = (frontier_cell[1], frontier_cell[2])
+        if cur_cell in bfs_explored.keys():
+            if frontier_cell[2] < bfs_explored[cur_cell][1]:
+                # if cost lower, then update explored set
+                bfs_explored[cur_cell] = (frontier_cell[1], frontier_cell[2])
             else:
+                # else the cost is higher and it has been explored, so continue
+                frontier_cell = bfs_frontier.pop(0)
+                cur_cell = frontier_cell[0]
                 continue
+        # if not in the explored set, add it
+        bfs_explored[cur_cell] = (frontier_cell[1], frontier_cell[2])
         # add neighbors to frontier
-        neighbors = maze.neighbors(frontier_cell[0])
-        # print(neighbors)
+        neighbors = maze.neighbors(cur_cell[0], cur_cell[1])
         for cell in neighbors:
-            bfs_frontier.append((cell, frontier_cell[0], frontier_cell[2]+1))
+            bfs_frontier.append((cell, cur_cell, frontier_cell[2]+1))
         frontier_cell = bfs_frontier.pop(0)
+        cur_cell = frontier_cell[0]
 
-    path = [frontier_cell[1]]
+    path = [cur_cell]
     cur_parent = frontier_cell[1]
     while cur_parent != maze.start:
-        path.index(0, cur_parent)
-    path.index(0, cur_parent)
+        path.insert(0, cur_parent)
+        explored_tuple = bfs_explored[cur_parent]
+        cur_parent = explored_tuple[0]
+    path.insert(0, cur_parent)
 
     return path
 
