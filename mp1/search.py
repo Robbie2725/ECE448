@@ -130,23 +130,21 @@ def astar_single(maze):
 
 def compute_mst_cost(waypoints, wp_bitmap_tuple):
     wp_bitmap = list(wp_bitmap_tuple)
-    size = 0
+    wp_list = []
     for i in range(len(wp_bitmap)):
         if wp_bitmap[i] == 0:
-            size += 1
+            wp_list.append(waypoints[i])
 
+    size = len(wp_list)
     if size == 1 or size == 0:
         return 0
 
-    g = Graph(len(waypoints))
-    for node1 in range(len(wp_bitmap)):
-        for node2 in range(len(wp_bitmap)):
+    g = Graph(size)
+    for node1 in range(size):
+        for node2 in range(size):
             if node2 == node1:
                 continue  # skip edge if dest, source are the same node
-            if wp_bitmap[node1] == 1 or wp_bitmap[node2] == 1:
-                g.add_edge(node1, node2, 0)
-                continue
-            g.add_edge(node1, node2, heuristic(waypoints[node1], waypoints[node2]))
+            g.add_edge(node1, node2, heuristic(wp_list[node1], wp_list[node2]))
 
     cost = 0
     for edge in g.kruskal():
