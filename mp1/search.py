@@ -20,7 +20,6 @@ files and classes when code is run, so be careful to not modify anything else.
 
 from time import sleep
 import heapq as pq
-from kruskal_check import Graph
 
 
 def bfs(maze):
@@ -129,43 +128,39 @@ def astar_single(maze):
     return path
 
 
-def compute_mst_cost(wp_list, wp_bitmap):
+def compute_mst_cost(waypoints, wp_bitmap_tuple):
+    wp_bitmap = list(wp_bitmap_tuple)
     size = 0
     for i in range(len(wp_bitmap)):
         if wp_bitmap[i] == 0:
             size += 1
 
-    if size == 1:
+    if size == 1 or size == 0:
         return 0
 
-    g = Graph(size)
+    g = Graph(len(waypoints))
     for node1 in range(len(wp_bitmap)):
-        if wp_bitmap[node1] == 1:
-            continue
         for node2 in range(len(wp_bitmap)):
-            if node2 == node1 or wp_bitmap[node2] == 1:
+            if node2 == node1:
                 continue  # skip edge if dest, source are the same node
-            g.add_edge(node1, node2, heuristic(wp_list[node1], wp_list[node2]))
-            # pq.heappush(edges, (heuristic(waypoints[node1], waypoints[node2]), node1, node2))  # sorted list of edges
-    # e = 0
-    # print(edges)
-    # # number of edges in MST is = # nodes - 1
-    # while e < len(waypoints)-1:
-    #     cur_edge = pq.heappop(edges)
-    #     if (cur_edge[2], cur_edge[0]) in kruskal_tree[cur_edge[1]]:
-    #         continue  # skip if they are already in same tree
-    #     e += 1
-    #     kruskal_tree[cur_edge[1]].append((cur_edge[2], cur_edge[0]))
-    #     kruskal_tree[cur_edge[2]].append((cur_edge[1], cur_edge[0]))
+            if wp_bitmap[node1] == 1 or wp_bitmap[node2] == 1:
+                g.add_edge(node1, node2, 0)
+                continue
+            g.add_edge(node1, node2, heuristic(waypoints[node1], waypoints[node2]))
 
-    # cost = 0
-    # print(kruskal_tree)
-    # for key in kruskal_tree:
-    #     cost += edge[1]
     cost = 0
     for edge in g.kruskal():
         cost += edge[2]
     return cost
+
+
+def all_waypoints_reached(cur_state):
+    cur_tuple = cur_state[1]
+    for i in cur_tuple:
+        if i == 0:
+            return False
+    return True
+
 
 def astar_corner(maze):
     """
@@ -175,95 +170,112 @@ def astar_corner(maze):
 
     @return path: a list of tuples containing the coordinates of each state in the computed path
         """
-    return []
-    # run A* on each pair of start -> waypoint and waypoint -> waypoint
-    # s_path_list = []
-    # for wp in maze.waypoints:
-    #     cur_cell = maze.start
-    #     maze_goal = wp
-    #     frontier = []  # priority queue of (cost+heuristic, (node, parent))
-    #     explored = {cur_cell: (None, 0)}  # maps ID -> (parent, cost+heuristic)
-    #
-    #     # add all the neighbors of the start to the frontier
-    #     for cell in maze.neighbors(cur_cell[0], cur_cell[1]):
-    #         g_plus_h = 1 + heuristic(cell, maze_goal)
-    #         pq.heappush(frontier, (g_plus_h, (cell, cur_cell)))
-    #
-    #     # iterate to first node in frontier
-    #     frontier_node = pq.heappop(frontier)
-    #     cur_cell = frontier_node[1][0]
-    #
-    #     # continue to iterate until goal state is reached
-    #     while cur_cell != maze_goal:
-    #
-    #         # compute cost + heuristic for the current cell
-    #         new_total_c = frontier_node[0]
-    #
-    #         # if this cell has been explored, and the explored cost+heuristic is higher, then skip
-    #         if cur_cell in explored.keys():
-    #             old_total_c = explored[cur_cell][1]
-    #             if new_total_c >= old_total_c:
-    #                 frontier_node = pq.heappop(frontier)
-    #                 cur_cell = frontier_node[1][0]
-    #                 continue
-    #
-    #         explored[cur_cell] = (frontier_node[1][1], new_total_c)
-    #         # add/update neighbors in frontier
-    #         neighbors = maze.neighbors(cur_cell[0], cur_cell[1])
-    #         for cell in neighbors:
-    #             total_c = frontier_node[0] + 1 + heuristic(cell, maze_goal)
-    #             pq.heappush(frontier, (total_c, (cell, cur_cell)))
-    #         frontier_node = pq.heappop(frontier)
-    #         cur_cell = frontier_node[1][0]
-    #
-    #     path = [cur_cell]
-    #     path_c = frontier_node[0]
-    #     cur_parent = frontier_node[1][1]
-    #     while cur_parent != maze.start:
-    #         path.insert(0, cur_parent)
-    #         explored_tuple = explored[cur_parent]
-    #         cur_parent = explored_tuple[0]
-    #     path.insert(0, cur_parent)
-    #
-    #     s_path_list.append(path)
-    #
-    # return []
-    # # vairables for search
-    # cur_cell = maze.start
-    # frontier = []  # priority queue of (path_cost+heuristic, state)
-    #
-    # wp_list = []
-    # goals_left = []
-    # for wp in maze.waypoints:
-    #     wp_list.append(wp)
-    #     goals_left.append(0)
-    # start_state = (cur_cell, maze.waypoints)  # state = (location, waypoints left)
-    # explored = {start_state: (None, 0)}  # maps state -> (parent_state, cost)
-    #
-    # mst_map = {}
-    #
-    # # add all the neighbors of the start to the frontier
-    # for cell in maze.neighbors(cur_cell[0], cur_cell[1]):
-    #     # check if waypoint, update goal state if so
-    #     if cell in maze.waypoints:
-    #         wp_list =
-    #     new_state = (cell, new_goals)
-    #     # find heuristic
-    #     i = 0
-    #     d_list = []
-    #     for wp in wp_list:
-    #         if new_goals[i] == 1:
-    #             i += 1
-    #             continue
-    #         d_list.append(heuristic(cell, wp_list[i]))
-    #         i += 1
-    #     mst_cost = compute_mst_cost(wp_list, new_goals)
-    #     mst_map[new_goals] = mst_cost
-    #     h_cost = mst_cost + min(d_list)
-    #     pq.heappush(frontier, (1 + h_cost, new_state))
-    #
-    # print(frontier)
-    # return []
+
+    # start search at maze start
+    cur_cell = maze.start
+
+    frontier = []  # initialize priority queue of (path_cost+heuristic, state)
+
+    goal_list = []
+    for i in maze.waypoints:
+        goal_list.append(0)
+    start_goal_tuple = tuple(goal_list)
+
+    # Cache the MST cost of the remaining waypoints, initially the only entry is all waypoints
+    mst_map = {start_goal_tuple: compute_mst_cost(maze.waypoints, start_goal_tuple)}
+
+    # find the closest waypoint
+    wp_d = []
+    for i in maze.waypoints:
+        wp_d.append(heuristic(cur_cell, i))
+
+    start_state = (cur_cell, start_goal_tuple)
+    cur_state = start_state
+
+    # add state to frontier
+    pq.heappush(frontier, (min(wp_d)+mst_map[start_goal_tuple], start_state))
+
+    parents = {start_state: None}  # Maps current state -> parent state
+    g_cost = {start_state: 0}  # Maps current state -> best path cost
+
+    wp_list = list(maze.waypoints)
+    while len(frontier) != 0:
+        frontier_node = pq.heappop(frontier)
+        cur_state = frontier_node[1]
+        cur_cell = cur_state[0]
+        # Check if current state is in the goal state
+        if all_waypoints_reached(cur_state):
+            break
+
+        # add/update neighbors
+        neighbors = maze.neighbors(cur_cell[0], cur_cell[1])
+        for cell in neighbors:
+            # check if cell is waypoint, if so then update the waypoint map
+            if cell in maze.waypoints:
+                old_goal_map = list(cur_state[1])
+                old_goal_map[wp_list.index(cell)] = 1
+                new_goal_tuple = tuple(old_goal_map)
+            else:
+                # else just use the goal state of the parent
+                new_goal_tuple = cur_state[1]
+
+            new_g = g_cost[cur_state] + 1
+            new_state = (cell, new_goal_tuple)
+
+            # if no g_cost, then add to frontier automatically
+            if new_state not in g_cost.keys():
+                # compute the heuristic
+                if new_goal_tuple in mst_map.keys():
+                    # if already computed, use the cached value
+                    mst_cost = mst_map[new_goal_tuple]
+                else:
+                    # else compute the mst cost and save for later
+                    mst_cost = compute_mst_cost(maze.waypoints, new_goal_tuple)
+                    mst_map[new_goal_tuple] = mst_cost
+                i = 0
+                d_list = []
+                for wp in maze.waypoints:
+                    if new_goal_tuple[i] == 0:
+                        i += 1
+                        d_list.append(heuristic(cell, wp))
+                    else:
+                        i += 1
+                        continue
+                if len(d_list) == 0:
+                    d_list = [0]
+                pq.heappush(frontier, (new_g+min(d_list)+mst_cost, new_state))
+                g_cost[new_state] = new_g
+                parents[new_state] = cur_state
+            elif new_g < g_cost[new_state]:
+                # compute the heuristic
+                if new_goal_tuple in mst_map.keys():
+                    # if already computed, use the cached value
+                    mst_cost = mst_map[new_goal_tuple]
+                else:
+                    # else compute the mst cost and save for later
+                    mst_cost = compute_mst_cost(maze.waypoints, new_goal_tuple)
+                    mst_map[new_goal_tuple] = mst_cost
+                i = 0
+                d_list = []
+                for wp in maze.waypoints:
+                    if new_goal_tuple[i] == 0:
+                        i += 1
+                        d_list.append(heuristic(cell, wp))
+                    else:
+                        i += 1
+                        continue
+                pq.heappush(frontier, (new_g+min(d_list) + mst_cost, new_state))
+                g_cost[new_state] = new_g
+                parents[new_state] = cur_state
+
+    # reconstruct path
+    path = [cur_cell]
+    parent_state = parents[cur_state]
+    while parents[parent_state] is not None:
+        path.insert(0, parent_state[0])
+        parent_state = parents[parent_state]
+    path.insert(0, parent_state[0])
+    return path
 
 
 def astar_multiple(maze):
@@ -275,7 +287,9 @@ def astar_multiple(maze):
 
     @return path: a list of tuples containing the coordinates of each state in the computed path
     """
-    return []
+
+    # Algorithm for part 3 works for part 4 as well
+    return astar_corner(maze)
 
 
 def fast(maze):
@@ -287,3 +301,51 @@ def fast(maze):
     @return path: a list of tuples containing the coordinates of each state in the computed path
     """
     return []
+
+
+# A graph class I found that implements kruskal's algorithm for finding an MST
+# Source is at https://www.pythonpool.com/kruskals-algorithm-python/
+# Instead of printing the result, I modified it to return the MST edges instead
+class Graph:
+    def __init__(self, vertex):
+        self.V = vertex
+        self.graph = []
+
+    def add_edge(self, u, v, w):
+        self.graph.append([u, v, w])
+
+    def search(self, parent, i):
+        if parent[i] == i:
+            return i
+        return self.search(parent, parent[i])
+
+    def apply_union(self, parent, rank, x, y):
+        xroot = self.search(parent, x)
+        yroot = self.search(parent, y)
+        if rank[xroot] < rank[yroot]:
+            parent[xroot] = yroot
+        elif rank[xroot] > rank[yroot]:
+            parent[yroot] = xroot
+        else:
+            parent[yroot] = xroot
+            rank[xroot] += 1
+
+    def kruskal(self):
+        result = []
+        i, e = 0, 0
+        self.graph = sorted(self.graph, key=lambda item: item[2])
+        parent = []
+        rank = []
+        for node in range(self.V):
+            parent.append(node)
+            rank.append(0)
+        while e < self.V - 1:
+            u, v, w = self.graph[i]
+            i = i + 1
+            x = self.search(parent, u)
+            y = self.search(parent, v)
+            if x != y:
+                e = e + 1
+                result.append([u, v, w])
+                self.apply_union(parent, rank, x, y)
+        return result
