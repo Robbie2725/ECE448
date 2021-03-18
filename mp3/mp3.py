@@ -46,7 +46,6 @@ def main(args):
     reader.init_seeds(args.seed)
 
     train_set, train_labels, dev_set, dev_labels = reader.load_dataset(args.dataset_file)
-
     p = p1 if args.part == 1 else p2
 
     train_set = torch.tensor(train_set, dtype=torch.float32)
@@ -55,6 +54,8 @@ def main(args):
 
     _, predicted_labels, net = p.fit(train_set, train_labels, dev_set, args.max_iter)
     accuracy, f1, precision, recall = compute_accuracies(predicted_labels, dev_set, dev_labels)
+    print(predicted_labels)
+    print(dev_labels)
 
     print("Accuracy:", accuracy)
     print("F1-Score:", f1)
