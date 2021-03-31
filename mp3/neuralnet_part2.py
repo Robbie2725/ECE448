@@ -36,7 +36,32 @@ class NeuralNet(nn.Module):
         """
         super(NeuralNet, self).__init__()
         self.loss_fn = loss_fn
-        raise NotImplementedError("You need to write this part!")
+        # self.model = nn.Sequential(
+        #     nn.Linear(in_size, 20),
+        #     nn.LeakyReLU(),
+        #     nn.Linear(20, 50),
+        #     nn.LeakyReLU(),
+        #     nn.Linear(50, 50),
+        #     nn.LeakyReLU(),
+        #     nn.Linear(50, out_size)
+        # )
+        self.model = nn.Sequential(
+            nn.Unflatten(1, (3, 32, 32)),
+            nn.Conv2d(3, 6, (3, 3)),
+            nn.LeakyReLU(),
+            nn.BatchNorm2d(6),
+            nn.Conv2d(6, 3, (3, 3)),
+            nn.LeakyReLU(),
+            nn.BatchNorm2d(3),
+            nn.Conv2d(3, 3, (3, 3)),
+            nn.LeakyReLU(),
+            nn.BatchNorm2d(3),
+            nn.Conv2d(3, 3, (3, 3)),
+            nn.Flatten(),
+            nn.BatchNorm1d(1728),
+            nn.Linear(1728, out_size)
+        )
+        self.optimizer = optim.SGD(self.model.parameters(), lr=lrate)
 
 
     def forward(self, x):
@@ -45,8 +70,11 @@ class NeuralNet(nn.Module):
         @param x: an (N, in_size) Tensor
         @return y: an (N, out_size) Tensor of output from the network
         """
-        raise NotImplementedError("You need to write this part!")
-        return torch.ones(x.shape[0], 1)
+        mean = x.mean(dim=1, keepdim=True)
+        std = x.std(dim=1, keepdim=True)
+        norm_x = (x - mean) / std
+        y = self.model(norm_x)
+        return y
 
     def step(self, x,y):
         """
@@ -56,8 +84,13 @@ class NeuralNet(nn.Module):
         @param y: an (N,) Tensor
         @return L: total empirical risk (mean of losses) at this timestep as a float
         """
-        raise NotImplementedError("You need to write this part!")
-        return 0.0
+        y_hat = self.model(x)
+        # print(y_hat.shape)
+        loss = self.loss_fn(y_hat, y)
+        self.optimizer.zero_grad()
+        loss.backward()
+        self.optimizer.step()
+        return loss.item()
 
 def fit(train_set,train_labels,dev_set,n_iter,batch_size=100):
     """ Make NeuralNet object 'net' and use net.step() to train a neural net
@@ -79,5 +112,24 @@ def fit(train_set,train_labels,dev_set,n_iter,batch_size=100):
     @return yhats: an (M,) NumPy array of binary labels for dev_set
     @return net: a NeuralNet object
     """
-    raise NotImplementedError("You need to write this part!")
-    return [],[],None
+    net = NeuralNet(0.02, nn.CrossEntropyLoss(), train_set.shape[1], 2)
+    # mean = train_set.mean(dim=1, keepdim=True)
+    # std = train_set.std(dim=1, keepdim=True)
+    # normalized_dev = (train_set - mean) / std
+    batch_list = torch.split(train_set, batch_size)
+    batch_labels = torch.split(train_labels, batch_size)
+    losses = []
+    for i in range(n_iter):
+        batch_in = batch_list[i % len(batch_list)]
+        batch_label_in = batch_labels[i % len(batch_list)]
+        mean = batch_in.mean(dim=1, keepdim=True)
+        std = batch_in.std(dim=1, keepdim=True)
+        normalized_set = (batch_in - mean) / std
+        loss = net.step(normalized_set, batch_label_in)
+        losses.append(loss)
+
+    outputs = net.forward(dev_set)
+    _, pred = torch.max(outputs, 1)
+    loss_ret = np.array(losses)
+
+    return loss_ret, np.array(pred), net
