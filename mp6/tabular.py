@@ -100,7 +100,7 @@ class TabQPolicy(QPolicy):
 if __name__ == '__main__':
     args = utils.hyperparameters()
 
-    env = gym.make('CartPole-v1')
+    env = gym.make('CartPole-v1') #
 
     statesize = env.observation_space.shape[0]
     actionsize = env.action_space.n
